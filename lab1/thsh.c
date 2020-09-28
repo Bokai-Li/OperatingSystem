@@ -85,15 +85,13 @@ int main(int argc, char **argv, char **envp) {
     //
     // For now, ret will be set to zero; once you implement command handling,
     // ret should be set to the return from the command.
+    ret = 0;
     int *retval = malloc(sizeof(int));
-    handle_builtin(parsed_commands[0], 0, 1, retval);
+    bool ifBuiltin = handle_builtin(parsed_commands[0], 0, 1, retval);
     
-    if(retval == 0){
+    if(ifBuiltin == 0){
       ret = run_command(parsed_commands[0], 0, 1, 0);
-    }else{
-      ret = 0;
     }
-
     // Do NOT change this if/printf - it is used by the autograder.
     if (ret) {
       printf("Failed to run command - error %d\n", ret);

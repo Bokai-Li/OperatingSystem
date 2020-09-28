@@ -11,8 +11,8 @@ struct builtin {
 };
 
 
-// static char old_path[MAX_INPUT];
-// static char cur_path[MAX_INPUT];
+static char old_path[MAX_INPUT];
+static char cur_path[MAX_INPUT];
 
 /* This function needs to be called once at start-up to initialize
  * the current path.  This should populate cur_path.
@@ -22,13 +22,16 @@ struct builtin {
 int init_cwd(void) {
 
   // Lab 1: Your code here
-
-  return 0;
+  if (getcwd(cur_path, sizeof(cur_path)) != NULL) {
+      return 0;
+   } else {
+      return -errno;
+   }
+      return 0;
 }
 
 /* Handle a cd command.  */
 int handle_cd(char *args[MAX_INPUT], int stdin, int stdout) {
-
   // Note that you need to handle special arguments, including:
   // "-" switch to the last directory
   // "." switch to the current directory.  This should change the
@@ -46,10 +49,21 @@ int handle_cd(char *args[MAX_INPUT], int stdin, int stdout) {
 
   // Remove the following two lines once implemented.  These
   // just suppress the compiler warning around an unused variable
-    (void) cur_path;
-    (void) old_path;
-  
-  printf("handling cd");
+  char *path = args[1];
+  if(path != NULL && strcmp(path, "-") == 0){ 
+    if(old_path == NULL){
+      return -errno;
+    }
+    chdir(old_path);
+    getcwd(old_path, sizeof(old_path));
+  }else if(path == NULL){
+    getcwd(old_path, sizeof(old_path));	  
+    char *s = getenv("HOME");
+    chdir(s);
+  }else{
+    getcwd(old_path, sizeof(old_path));	  
+    chdir(path);                                
+  }
   return 42;
 }
 
