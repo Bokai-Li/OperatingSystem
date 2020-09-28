@@ -129,8 +129,12 @@ int print_prompt(void) {
   // print the whole prompt string (write number of
   // bytes/chars equal to the length of prompt)
   //
-  const char *prompt = "thsh> ";
-
+  init_cwd();
+  //char * path = "[";
+  //const char *prompt = strcat(strcat(strcat("[",cur_path),"]"),"thsh> ");
+  //const char *prompt = strcat(path,"thsh> ");
+  char prompt[MAX_INPUT+7];
+  snprintf(prompt, sizeof(prompt), "%s%s%s%s", "[", cur_path, "]", " thsh> ");
   // Lab 1: Your code here
 
 
