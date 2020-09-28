@@ -46,7 +46,9 @@ int handle_cd(char *args[MAX_INPUT], int stdin, int stdout) {
 
   // Remove the following two lines once implemented.  These
   // just suppress the compiler warning around an unused variable
-
+    (void) cur_path;
+    (void) old_path;
+  
   printf("handling cd");
   return 42;
 }
