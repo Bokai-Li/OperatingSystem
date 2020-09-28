@@ -85,6 +85,7 @@ int main(int argc, char **argv, char **envp) {
     //
     // For now, ret will be set to zero; once you implement command handling,
     // ret should be set to the return from the command.
+    dprintf(1, "%s\n", cmd);
     ret = 0;
     int *retval = malloc(sizeof(int));
     bool ifBuiltin = handle_builtin(parsed_commands[0], 0, 1, retval);
