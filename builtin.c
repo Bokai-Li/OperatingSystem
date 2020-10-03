@@ -13,6 +13,7 @@ struct builtin {
 
 static char old_path[MAX_INPUT];
 static char cur_path[MAX_INPUT];
+static char temp[MAX_INPUT];
 
 /* This function needs to be called once at start-up to initialize
  * the current path.  This should populate cur_path.
@@ -52,10 +53,11 @@ int handle_cd(char *args[MAX_INPUT], int stdin, int stdout) {
   char *path = args[1];
   if(path != NULL && strcmp(path, "-") == 0){ 
     if(old_path == NULL){
-      return -errno;
+        strcpy(old_path, cur_path);
     }
-    chdir(old_path);
+    strcpy(temp, old_path);
     getcwd(old_path, sizeof(old_path));
+    chdir(temp);
   }else if(path == NULL){
     getcwd(old_path, sizeof(old_path));	  
     char *s = getenv("HOME");
