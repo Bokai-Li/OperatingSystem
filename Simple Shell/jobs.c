@@ -62,7 +62,7 @@ int init_path(void) {
         count += (path[i] == ':');
 
     // initialize path table
-    path_table = malloc(sizeof( * path_table) * (count + 1));
+    path_table = malloc(sizeof( * path_table) * (count + 1)+1);
 
     // use strtok to seperate string delimited by ':'
     char * token = strtok(path, ":");
@@ -119,26 +119,26 @@ int run_command(char *args[MAX_ARGS], int stdin, int stdout, bool wait){
   char *env[] = { 0 };	/* leave the environment list null */
   //char *argv[] = {*args, 0};
   char *path;
+  int stat_loc;
+  bool flag=false;
   struct stat stats;
-  int exec_status, stat_loc;
-  bool canFind = false;
-
   // if args[0] != '.' or '/', then search for the binary in the path table
   if(args[0][0] != '.' && args[0][0] != '/'){
     for(int i = 0; path_table[i]; i++){
-        char * binary = malloc(strlen(path_table[i]) + strlen(args[0]) + 1);
+        char * binary =(char *) malloc(strlen(path_table[i]) + strlen(args[0]) + 2);
         strcpy(binary, path_table[i]);
         strcat(strcat(binary, "/"), args[0]);
         //find if binary is exists; if so, let path be binary, else, loop again
         if (stat(binary, &stats) == 0){
             path = binary;
-            canFind = true;
+            flag = true;
+            break;
         }else{
             free(binary);
-        }  
+        }
     }
-    if(!canFind){
-        rv = -errno;
+    if(!flag){
+        return -errno;
     }
   }else{
       path = args[0];
@@ -147,9 +147,19 @@ int run_command(char *args[MAX_ARGS], int stdin, int stdout, bool wait){
   // create child to exec
   int pid = fork();
   if(pid == 0){
-      exec_status = execve(path, args, env);
-      rv = -errno;
-      exit(exec_status);
+    // dup the file handle if they are not 0 and 1
+    if (stdin != 0){
+        dup2(stdin, 0);
+        close(stdin);
+    }   
+
+    if (stdout != 1){
+        dup2(stdout, 1);
+        close(stdout);
+    }
+    execve(path, args, env);
+    rv = -errno;
+    exit(3);
   }else{
       waitpid(pid, &stat_loc, WUNTRACED);
   }

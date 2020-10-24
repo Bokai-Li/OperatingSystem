@@ -13,6 +13,7 @@ struct builtin {
 
 static char old_path[MAX_INPUT];
 static char cur_path[MAX_INPUT];
+static char temp_path[MAX_INPUT];
 
 /* This function needs to be called once at start-up to initialize
  * the current path.  This should populate cur_path.
@@ -27,11 +28,11 @@ int init_cwd(void) {
    } else {
       return -errno;
    }
-      return 0;
 }
 
 /* Handle a cd command.  */
 int handle_cd(char *args[MAX_INPUT], int stdin, int stdout) {
+
   // Note that you need to handle special arguments, including:
   // "-" switch to the last directory
   // "." switch to the current directory.  This should change the
@@ -45,25 +46,28 @@ int handle_cd(char *args[MAX_INPUT], int stdin, int stdout) {
   // XXX: Test for errors in the output if a cd fails
 
   // Lab 1: Your code here
-  //
-
-  // Remove the following two lines once implemented.  These
-  // just suppress the compiler warning around an unused variable
   char *path = args[1];
-  if(path != NULL && strcmp(path, "-") == 0){ 
+
+  if(path != NULL && strcmp(path, "-") == 0){    // cd -
     if(old_path == NULL){
-      return -errno;
+      strcpy(old_path, cur_path);
     }
-    chdir(old_path);
+    strcpy(temp_path, old_path);
     getcwd(old_path, sizeof(old_path));
-  }else if(path == NULL){
-    getcwd(old_path, sizeof(old_path));	  
+    chdir(temp_path);
+  }
+
+  if(path == NULL){                             // cd
+    getcwd(old_path, sizeof(old_path));                     
     char *s = getenv("HOME");
     chdir(s);
-  }else{
-    getcwd(old_path, sizeof(old_path));	  
+  }
+
+  if(path != NULL && strcmp(path, "-") != 0){   // general case
+    getcwd(old_path, sizeof(old_path));
     chdir(path);                                
   }
+  
   return 42;
 }
 
@@ -73,10 +77,52 @@ int handle_exit(char *args[MAX_ARGS], int stdin, int stdout) {
   return 0; // Does not actually return
 }
 
-
+/* Handle an goheels command. */
+int handle_goheels(char *args[MAX_ARGS], int stdin, int stdout) {
+    printf("\n");
+    printf("                     ::::::::                              :: ::::::              \n");
+    printf("               :::::         ::::::::::::::::::::::::::::::          ::::         \n");
+    printf("               :::                                                    ::          \n");
+    printf("                :::                                                  ::           \n");
+    printf("             ::::                                                     ::::        \n");
+    printf("           :::                                                            :::     \n");
+    printf("         ::                           :::::::::::::::                        :::  \n");
+    printf("       :::                               :::        ::                      :::   \n");
+    printf("      :::                                   ::      ::          ::        :::     \n");
+    printf("     :::            :::                       ::    ::          ::::::  :::       \n");
+    printf("     ::           :: ::                         ::: ::          ::    ::          \n");
+    printf("     ::           :   :           ::              ::::          ::                \n");
+    printf("     ::           :   :           ::::              :           ::                \n");
+    printf("      ::          ::: :           ::  ::                        ::   ::::         \n");
+    printf("      :::           :::           ::    ::                      :::::   :::       \n");
+    printf("       :::                        ::      ::                               ::     \n");
+    printf("         :::                      :::::::::::::                             :::   \n");
+    printf("           :::                                                             :::    \n");
+    printf("             :::                                                       ::::       \n");
+    printf("                :::                                                :::            \n");
+    printf("                 ::                                                  ::           \n");
+    printf("                ::            ::::::::::::::::::::::::::::           :::         \n");
+    printf("                  :::::::   ::                           :::   ::::::             \n");
+    printf("                          ::                               :::                    \n");
+    printf("                                                                                \n");
+    printf("\n");
+    printf("      ___           ___           ___           ___           ___           ___       ___\n");
+    printf("     /\\  \\         /\\  \\         /\\__\\         /\\  \\         /\\  \\         /\\__\\     /\\  \\    \n");
+    printf("    /::\\  \\       /::\\  \\       /:/  /        /::\\  \\       /::\\  \\       /:/  /    /::\\  \\   \n");
+    printf("   /:/\\:\\  \\     /:/\\:\\  \\     /:/__/        /:/\\:\\  \\     /:/\\:\\  \\     /:/  /    /:/\\ \\  \\  \n");
+    printf("  /:/  \\:\\  \\   /:/  \\:\\  \\   /::\\  \\ ___   /::\\~\\:\\  \\   /::\\~\\:\\  \\   /:/  /    _\\:\\~\\ \\  \\ \n");
+    printf(" /:/__/_\\:\\__\\ /:/__/ \\:\\__\\ /:/\\:\\  /\\__\\ /:/\\:\\ \\:\\__\\ /:/\\:\\ \\:\\__\\ /:/__/    /\\ \\:\\ \\ \\__\\\n");
+    printf(" \\:\\  /\\ \\/__/ \\:\\  \\ /:/  / \\/__\\:\\/:/  / \\:\\~\\:\\ \\/__/ \\:\\~\\:\\ \\/__/ \\:\\  \\    \\:\\ \\:\\ \\/__/\n");
+    printf("  \\:\\ \\:\\__\\    \\:\\  /:/  /       \\::/  /   \\:\\ \\:\\__\\    \\:\\ \\:\\__\\    \\:\\  \\    \\:\\ \\:\\__\\  \n");
+    printf("   \\:\\/:/  /     \\:\\/:/  /        /:/  /     \\:\\ \\/__/     \\:\\ \\/__/     \\:\\  \\    \\:\\/:/  /  \n");
+    printf("    \\::/  /       \\::/  /        /:/  /       \\:\\__\\        \\:\\__\\        \\:\\__\\    \\::/  /   \n");
+    printf("     \\/__/         \\/__/         \\/__/         \\/__/         \\/__/         \\/__/     \\/__/    \n");
+  return 1;
+}
 
 static struct builtin builtins[] = {{"cd", handle_cd},
 				    {"exit", handle_exit},
+                    {"goheels",handle_goheels},
 				    {'\0', NULL}};
 
 /* This function checks if the command (args[0]) is a built-in.
@@ -99,7 +145,7 @@ int handle_builtin(char * args[MAX_ARGS], int stdin, int stdout, int * retval) {
   // loop through all builtin command list
   while (builtins[i].cmd) {
     // if the input args matches one of the command
-    if (strcmp( * args, builtins[i].cmd) == 0) {
+    if (strcmp(*args, builtins[i].cmd) == 0) {
       // save ans and return 1
       int ans = builtins[i].func(args, stdin, stdout);
       * retval = ans;
@@ -129,14 +175,11 @@ int print_prompt(void) {
   // print the whole prompt string (write number of
   // bytes/chars equal to the length of prompt)
   //
-  init_cwd();
-  //char * path = "[";
-  //const char *prompt = strcat(strcat(strcat("[",cur_path),"]"),"thsh> ");
-  //const char *prompt = strcat(path,"thsh> ");
-  char prompt[MAX_INPUT+7];
-  snprintf(prompt, sizeof(prompt), "%s%s%s%s", "[", cur_path, "]", " thsh> ");
-  // Lab 1: Your code here
+  char prompt[MAX_INPUT];
 
+  // Lab 1: Your code here
+  init_cwd();
+  snprintf(prompt, sizeof(prompt), "%s%s%s%s", "[", cur_path, "]", " thsh> ");
 
   ret = write(1, prompt, strlen(prompt));
   return ret;

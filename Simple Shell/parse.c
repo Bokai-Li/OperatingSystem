@@ -4,6 +4,13 @@
  * in the assignment handout.
  */
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
 #include "thsh.h"
 
 /* This function returns one line from input_fd
@@ -143,124 +150,138 @@ int read_one_line(int input_fd, char *buf, size_t size) {
  * return value: Number of entries populated in commands (1+, not counting the NULL),
  *               or -errno on failure
  */
+void rmspace(char* s){
+    int i, k;
+    for(i = k = 0; s[i]; ++i){
+        if(!isspace(s[i]) || (i > 0 && !isspace(s[i-1]))){
+            s[k++] = s[i];
+        }
+    }
+    s[k] = '\0';
+}
 
-int parse_line(char * inbuf, size_t length,
-    char * commands[MAX_PIPELINE][MAX_ARGS],
-    char ** infile, char ** outfile) {
-    // reset commands variable with /0 to handle new input
-    for (int m = 0; m < MAX_PIPELINE; m++) {
-        for (int n = 0; n < MAX_ARGS; n++) {
-            commands[m][n] = '\0';
-        }
-    }
-    // create iterating pointer
-    char * pointer;
-    pointer = malloc(length);
-    memcpy(pointer, inbuf, length);
-    // create second temperary iterating pointer
-    char * temp2 = pointer;
-    // handle comments ignore leading spaces
-    while ( * temp2 == ' ') {
-        temp2++;
-    }
-    // case: all comment
-    if ( * temp2 == '#')
-        return 1;
-    if ( * temp2 == '\n')
-        return 1;
-    // case: comment at the end
-    while ( * temp2 != '\n') {
-        // change comment with terminating char
-        if ( * temp2 == '#') {
-            * temp2 = '\n';
-            break;
-        }
-        temp2++;
-    }
-    // move pointer1 to ignore leading spaces
-    while ( * pointer == ' ') {
-        pointer++;
-    }
-    // command index
-    int comIndex = 0;
-    // input index
-    int inputIndex = 0;
-    // store current pointer address
-    commands[0][0] = pointer;
-    // handle |, >, <
-    while ( * pointer != '\n') {
-        if ( * pointer == '|') {
-            * pointer = '\0';
-            pointer++;
-            inputIndex = 0;
-            // ignore trailing spaces
-            while ( * pointer == ' ')
-                pointer++;
-            comIndex++;
-            // store current pointer address
-            commands[comIndex][inputIndex] = pointer;
-        } else if ( * pointer == '>') {
-            * pointer = '\0';
-            pointer++;
-            inputIndex = 0;
-            // ignore trailing spaces
-            while ( * pointer == ' ')
-                pointer++;
-            outfile[0] = pointer;
-            // handle pipe or end of the line
-            while ( * (pointer + 1) != '|' && * (pointer + 1) != '\n') {
-                if ( * (pointer + 1) == ' ') {
-                    *(pointer + 1) = '\0';
-                    pointer += 2;
-                    // ignore trailing spaces
-                    while ( * pointer == ' ')
-                        pointer++;
-                    // move pointer one prior of the special char (pipe or in/out character)
-                    pointer--;
-                } else {
-                    pointer++;
-                }
-            }
-        } else if ( * pointer == '<') {
-            * pointer = '\0';
-            pointer++;
-            inputIndex = 0;
-            // ignore trailing spaces
-            while ( * pointer == ' ')
-                pointer++;
-            infile[0] = pointer;
-            // handle pipe or end of the line
-            while ( * (pointer + 1) != '|' && * (pointer + 1) != '\n') {
-                if ( * (pointer + 1) == ' ') {
-                    *(pointer + 1) = '\0';
-                    pointer += 2;
-                    // ignore trailing spaces
-                    while ( * pointer == ' ')
-                        pointer++;
-                    // move pointer one prior of the special char (pipe or in/out character)
-                    pointer--;
-                } else {
-                    pointer++;
-                }
-            }
-            // handle leading spaces
-        } else if ( * pointer == ' ') {
-            * pointer = '\0';
-            pointer++;
-            // ignore leading spaces
-            while ( * pointer == ' ')
-                pointer++;
-            // handle input args
-            if ( * pointer != '>' && * pointer != '<' && * pointer != '|') {
-                inputIndex++;
-                commands[comIndex][inputIndex] = pointer;
-            } else {
-                pointer--;
-            }
-        }
-        pointer++;
-    }
-    * pointer = '\0';
+int parse_line (char *inbuf, size_t length,
+		char *commands [MAX_PIPELINE][MAX_ARGS],
+		char **infile, char **outfile) {
 
-    return comIndex + 1;
+  // Lab 0: Your code here
+    int i, k;
+    int row = 0;
+    int col;
+    char **pipeline_table;
+    char **in_table;
+    char **out_table;
+    char *hasin;
+    char *hasout;
+
+    for (i = 0; i < MAX_PIPELINE; i++) {
+        for (k = 0; k < MAX_ARGS; k++) {
+            commands[i][k] = '\0';
+        }
+    }
+    // make a copy of inbuf
+    char *com = strdup(inbuf ? inbuf : "");
+
+    if(com == NULL){
+      return -errno;
+    }
+
+    i = 0;
+    while(com[i] == ' '){
+      i++;
+    }
+    if(com[i] == '#'){
+      return 1;
+    }
+    if(com[i] == '\n'){
+      return 1;
+    }
+
+    // remove '\n'
+    com[strlen(com)-1] = '\0';
+
+    // remove comments
+    i = 0;
+    while(com[i] != '#' && com[i]){
+        i++;
+    }
+    com[i] = '\0';
+
+    // count how many rows should path_table have i.e. no. of colon + 1
+    for (i = 0; i < strlen(com); i++){
+        if (com[i] == '|'){
+            row++;
+        }
+    }
+    row += 1;
+
+    pipeline_table = malloc((row) * sizeof(*pipeline_table));
+    in_table = malloc(2 * sizeof(*in_table));
+    out_table = malloc(2 * sizeof(*out_table));
+
+    // split pipelines
+    char *pipeline = strtok(com, "|");
+    i = 0;
+    while( pipeline != NULL ) {
+        rmspace(pipeline);                
+        pipeline_table[i] = pipeline;
+        pipeline = strtok(NULL, "|");
+        i++;
+    }
+
+    // split tokens
+    char *token;
+    char *inout;
+    for(i = 0; i < row; i++){
+        hasin = strchr (pipeline_table[i], '<');
+        hasout = strchr (pipeline_table[i], '>');
+
+        if(hasin){
+            inout = strtok(pipeline_table[i], "<");
+            k = 0;
+            // base case: no special character
+            while( inout != NULL ) {
+                rmspace(inout);
+                in_table[k] = inout;
+                inout = strtok(NULL, "<");
+                k++;
+            }   
+            int in_len = strlen(in_table[1]);
+            if(in_table[1][in_len - 1] == ' '){
+               in_table[1][in_len - 1] = '\0'; 
+            }
+            *infile = in_table[1];
+            pipeline_table[i] = in_table[0];
+        }
+
+        if(hasout){
+            inout = strtok(pipeline_table[i], ">");
+            k = 0;
+            // base case: no special character
+            while( inout != NULL ) {
+                rmspace(inout);
+                out_table[k] = inout;
+                inout = strtok(NULL, ">");
+                k++;
+            }
+            int out_len = strlen(out_table[1]);
+            if(out_table[1][out_len - 1] == ' '){
+              out_table[1][out_len - 1] = '\0'; 
+            } 
+            *outfile = out_table[1];
+            pipeline_table[i] = out_table[0];
+        }
+
+        // base case
+        token = strtok(pipeline_table[i], " ");
+        col = 0;
+        while( token != NULL ) {
+            commands[i][col] = token;
+            token = strtok(NULL, " ");
+            col++;
+        }
+        commands[i][col] = '\0';
+    }
+
+  return row;
 }

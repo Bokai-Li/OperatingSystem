@@ -1,0 +1,22 @@
+total 776
+-rw-r--r-- 1 bokai247 compsci    604 Sep 27 20:32 Makefile
+-rw-r--r-- 1 bokai247 compsci      0 Sep  4 22:12 build
+-rw-r--r-- 1 bokai247 compsci   3759 Oct  3 10:37 builtin.c
+-rw-r--r-- 1 bokai247 compsci     68 Sep  4 13:58 challenge.txt
+-rw-r--r-- 1 bokai247 compsci   4468 Oct  3 10:37 jobs.c
+-rwxr-xr-x 1 bokai247 compsci      0 Oct  3 10:38 newfile
+-rw-r--r-- 1 bokai247 compsci      0 Sep  4 21:30 parse
+-rw-r--r-- 1 bokai247 compsci   8749 Oct  3 10:37 parse.c
+-rwxr-xr-x 1 bokai247 compsci  29992 Oct  3 10:38 parser_tester
+-rw-r--r-- 1 bokai247 compsci   1989 Sep  4 13:58 parser_tester.c
+-rw-r--r-- 1 bokai247 compsci   9212 Oct  3 10:37 parsesave.c
+-rw-r--r-- 1 bokai247 compsci     90 Sep 27 20:32 play.c
+-rw-r--r-- 1 bokai247 compsci   3412 Sep 27 20:32 playground.c
+-rw-r--r-- 1 bokai247 compsci   6208 Oct  3 10:37 saving.c
+-rw-r--r-- 1 bokai247 compsci     95 Sep  4 13:58 slack.txt
+-rwxr-xr-x 1 bokai247 compsci  29392 Oct  3 10:38 test_env
+-rw-r--r-- 1 bokai247 compsci    397 Sep  4 13:58 test_env.c
+-rwxr-xr-x 1 bokai247 compsci  30472 Oct  3 10:37 thsh
+-rw-r--r-- 1 bokai247 compsci   5025 Oct  3 10:37 thsh.c
+-rw-r--r-- 1 bokai247 compsci    954 Sep  4 13:58 thsh.h
+-rw-r--r-- 1 bokai247 compsci 609792 Sep  5 15:43 thsh.h.gch
